@@ -14,6 +14,7 @@ use halo2aggregator_s::native_verifier;
 use log::info;
 use std::io::Write;
 use std::path::PathBuf;
+use std::time::Instant;
 
 pub fn exec_setup<Arg, Builder>(
     zkwasm_k: u32,
@@ -106,7 +107,10 @@ pub fn exec_dry_run<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
 ) -> Result<()> {
     let loader =
         ZkWasmLoader::<Bn256, Arg, Builder>::new(zkwasm_k, wasm_binary, phantom_functions)?;
+    let start = Instant::now();
     loader.run(arg, true, false)?;
+    let duration = start.elapsed();
+    println!("Dry run time: {:?}", duration);
     Ok(())
 }
 
