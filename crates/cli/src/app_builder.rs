@@ -15,6 +15,7 @@ use crate::exec::exec_dry_run;
 
 use super::command::CommandBuilder;
 use super::exec::exec_create_proof;
+use super::exec::exec_create_witness;
 use super::exec::exec_image_checksum;
 use super::exec::exec_setup;
 use super::exec::exec_verify_proof;
@@ -69,6 +70,7 @@ pub trait AppBuilder: CommandBuilder {
 
         let app = Self::append_setup_subcommand(app);
         let app = Self::append_dry_run_subcommand(app);
+        let app = Self::append_create_single_witness_subcommand(app);
         let app = Self::append_create_single_proof_subcommand(app);
         let app = Self::append_verify_single_proof_subcommand(app);
         let app = Self::append_image_checksum_subcommand(app);
@@ -138,6 +140,35 @@ pub trait AppBuilder: CommandBuilder {
                 )?;
 
                 write_context_output(&context_output.lock().unwrap(), context_out_path)?;
+
+                Ok(())
+            }
+            Some(("single-witness", sub_matches)) => {
+                let public_inputs: Vec<u64> = Self::parse_single_public_arg(&sub_matches);
+                let private_inputs: Vec<u64> = Self::parse_single_private_arg(&sub_matches);
+                let context_in: Vec<u64> = Self::parse_context_in_arg(&sub_matches);
+                let context_out_path: Option<PathBuf> =
+                    Self::parse_context_out_path_arg(&sub_matches);
+
+                let context_out = Arc::new(Mutex::new(vec![]));
+
+                assert!(public_inputs.len() <= Self::MAX_PUBLIC_INPUT_SIZE);
+
+                exec_create_witness::<ExecutionArg, DefaultHostEnvBuilder>(
+                    Self::NAME,
+                    zkwasm_k,
+                    wasm_binary,
+                    phantom_functions,
+                    &output_dir,
+                    ExecutionArg {
+                        public_inputs,
+                        private_inputs,
+                        context_inputs: context_in,
+                        context_outputs: context_out.clone(),
+                    },
+                )?;
+
+                write_context_output(&context_out.lock().unwrap(), context_out_path)?;
 
                 Ok(())
             }

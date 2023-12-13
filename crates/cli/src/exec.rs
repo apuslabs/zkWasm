@@ -123,10 +123,13 @@ pub fn exec_create_proof<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
     param_dir: &PathBuf,
     arg: Arg,
 ) -> Result<()> {
+    let start = Instant::now();
     let loader =
         ZkWasmLoader::<Bn256, Arg, Builder>::new(zkwasm_k, wasm_binary, phantom_functions)?;
 
     let (circuit, instances, _) = loader.circuit_with_witness(arg)?;
+    let duration = start.elapsed();
+    info!("Witness time: {:?}", duration);
 
     if true {
         info!("Mock test...");
@@ -143,8 +146,45 @@ pub fn exec_create_proof<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
     );
     circuit.proofloadinfo.save(output_dir);
     circuit.exec_create_proof(output_dir, param_dir, 0);
+    
+    let proof_duration = start.elapsed();
+    info!("Proof has been created. Proof time: {:?}", proof_duration);
 
-    info!("Proof has been created.");
+    Ok(())
+}
+
+pub fn exec_create_witness<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
+    prefix: &'static str,
+    zkwasm_k: u32,
+    wasm_binary: Vec<u8>,
+    phantom_functions: Vec<String>,
+    output_dir: &PathBuf,
+    arg: Arg,
+) -> Result<()> {
+    let loader =
+        ZkWasmLoader::<Bn256, Arg, Builder>::new(zkwasm_k, wasm_binary, phantom_functions)?;
+
+    let start = Instant::now();
+    let (circuit, instances, _) = loader.circuit_with_witness(arg)?;
+    let duration = start.elapsed();
+    println!("Witness time: {:?}", duration);
+
+    if true {
+        info!("Mock test...");
+        loader.mock_test(&circuit, &instances)?;
+        info!("Mock test passed");
+    }
+
+    let circuit: CircuitInfo<Bn256, TestCircuit<Fr>> = CircuitInfo::new(
+        circuit,
+        prefix.to_string(),
+        vec![instances],
+        zkwasm_k as usize,
+        circuits_batcher::args::HashType::Poseidon,
+    );
+    circuit.proofloadinfo.save(output_dir);
+
+    info!("Witness has been created.");
 
     Ok(())
 }
