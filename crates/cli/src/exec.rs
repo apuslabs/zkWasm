@@ -110,7 +110,7 @@ pub fn exec_dry_run<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
     let start = Instant::now();
     loader.run(arg, true, false)?;
     let duration = start.elapsed();
-    println!("Dry run time: {:?}", duration);
+    info!("Dry run time: {:?}", duration);
     Ok(())
 }
 
@@ -131,7 +131,7 @@ pub fn exec_create_proof<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
     let duration = start.elapsed();
     info!("Witness time: {:?}", duration);
 
-    if true {
+    if false {
         info!("Mock test...");
         loader.mock_test(&circuit, &instances)?;
         info!("Mock test passed");
@@ -167,9 +167,8 @@ pub fn exec_create_witness<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
     let start = Instant::now();
     let (circuit, instances, _) = loader.circuit_with_witness(arg)?;
     let duration = start.elapsed();
-    println!("Witness time: {:?}", duration);
 
-    if true {
+    if false {
         info!("Mock test...");
         loader.mock_test(&circuit, &instances)?;
         info!("Mock test passed");
@@ -185,6 +184,7 @@ pub fn exec_create_witness<Arg, Builder: HostEnvBuilder<Arg = Arg>>(
     circuit.proofloadinfo.save(output_dir);
 
     info!("Witness has been created.");
+    info!("Witness time: {:?}", duration);
 
     Ok(())
 }
